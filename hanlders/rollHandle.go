@@ -11,13 +11,18 @@ import (
 	"github.com/MikebangSfilya/diceRoller/parser"
 )
 
+type ParseManager interface {
+	Parse(contentType string, input []byte) ([]parser.PersonRequest, error)
+	Register(contentType string, p parser.Parser)
+}
+
 type Handlers struct {
 	Dice  *diceroll.Dice
-	Parse parser.ParserManager
+	Parse ParseManager
 	Cache *cache.InitiativeCache
 }
 
-func New(dice *diceroll.Dice, parse parser.ParserManager) *Handlers {
+func New(dice *diceroll.Dice, parse ParseManager) *Handlers {
 	return &Handlers{
 		Dice:  dice,
 		Parse: parse,

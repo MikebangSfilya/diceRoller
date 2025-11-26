@@ -11,7 +11,7 @@ func main() {
 	dice := &diceroll.Dice{}
 
 	parserManager := parser.NewParserManager()
-	handler := hanlders.New(dice, *parserManager)
+	handler := hanlders.New(dice, parserManager)
 	srv := server.NewServer(handler)
 	srv.Start()
 }
