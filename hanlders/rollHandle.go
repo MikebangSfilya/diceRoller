@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sort"
 
+	cache "github.com/MikebangSfilya/diceRoller/Cache"
 	"github.com/MikebangSfilya/diceRoller/diceroll"
 	"github.com/MikebangSfilya/diceRoller/parser"
 )
@@ -13,12 +14,14 @@ import (
 type Handlers struct {
 	Dice  *diceroll.Dice
 	Parse parser.ParserManager
+	Cache *cache.InitiativeCache
 }
 
-func New(dice *diceroll.Dice, parse parser.ParserManager) *Handlers { // интерфейс
+func New(dice *diceroll.Dice, parse parser.ParserManager) *Handlers {
 	return &Handlers{
 		Dice:  dice,
 		Parse: parse,
+		Cache: cache.NewInitiativeCache(),
 	}
 }
 
@@ -37,14 +40,22 @@ func (h *Handlers) Roll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	CacheData := []cache.CacheRols{}
 	personsRes := []parser.PersonResult{}
 
 	for _, v := range persons {
 		roll := h.Dice.Roll()
+		dextPlusWits := v.Dext + v.Wits
+
+		CacheData = append(CacheData, cache.New(v.Name, dextPlusWits))
+
 		d := <-roll
-		sum := d + v.Wits + v.Dext
+
+		sum := d + dextPlusWits
 		personsRes = append(personsRes, parser.PersonResult{Name: v.Name, Sum: sum})
 	}
+
+	h.Cache.Set(CacheData)
 
 	sort.Slice(personsRes, func(i, j int) bool {
 		return personsRes[i].Sum < personsRes[j].Sum
